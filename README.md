@@ -11,6 +11,11 @@
 Si te da error te dejo la documentacion de este script, que me basé en el y la forma de instalarlo es exactamente la misma.
 Documentación: https://docs.qbcore.org/qbcore-documentation/qbcore-resources/qb-banking
 
+## Dependencias
+qb-core
+PolyZone
+oxmysql
+
 # Licencia
 
 Marco de trabajo DP-Codes
