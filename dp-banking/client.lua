@@ -4,7 +4,7 @@ local zones = {}
 -- Functions
 
 local function OpenBank()
-    QBCore.Functions.TriggerCallback('qb-banking:server:openBank', function(accounts, statements, playerData)
+    QBCore.Functions.TriggerCallback('dp-banking:server:openBank', function(accounts, statements, playerData)
         SetNuiFocus(true, true)
         SendNUIMessage({
             action = 'openBank',
@@ -30,7 +30,7 @@ local function OpenATM()
         coords = vector3(0.1, 0.03, -0.05),
         rotation = vector3(0.0, 0.0, 180.0),
     }, {}, function()
-        QBCore.Functions.TriggerCallback('qb-banking:server:openATM', function(accounts, playerData, acceptablePins)
+        QBCore.Functions.TriggerCallback('dp-banking:server:openATM', function(accounts, playerData, acceptablePins)
             SetNuiFocus(true, true)
             SendNUIMessage({
                 action = 'openATM',
@@ -61,68 +61,68 @@ RegisterNUICallback('closeApp', function(_, cb)
 end)
 
 RegisterNUICallback('withdraw', function(data, cb)
-    QBCore.Functions.TriggerCallback('qb-banking:server:withdraw', function(status)
+    QBCore.Functions.TriggerCallback('dp-banking:server:withdraw', function(status)
         cb(status)
     end, data)
 end)
 
 RegisterNUICallback('deposit', function(data, cb)
-    QBCore.Functions.TriggerCallback('qb-banking:server:deposit', function(status)
+    QBCore.Functions.TriggerCallback('dp-banking:server:deposit', function(status)
         cb(status)
     end, data)
 end)
 
 RegisterNUICallback('internalTransfer', function(data, cb)
-    QBCore.Functions.TriggerCallback('qb-banking:server:internalTransfer', function(status)
+    QBCore.Functions.TriggerCallback('dp-banking:server:internalTransfer', function(status)
         cb(status)
     end, data)
 end)
 
 RegisterNUICallback('externalTransfer', function(data, cb)
-    QBCore.Functions.TriggerCallback('qb-banking:server:externalTransfer', function(status)
+    QBCore.Functions.TriggerCallback('dp-banking:server:externalTransfer', function(status)
         cb(status)
     end, data)
 end)
 
 RegisterNUICallback('orderCard', function(data, cb)
-    QBCore.Functions.TriggerCallback('qb-banking:server:orderCard', function(status)
+    QBCore.Functions.TriggerCallback('dp-banking:server:orderCard', function(status)
         cb(status)
     end, data)
 end)
 
 RegisterNUICallback('openAccount', function(data, cb)
-    QBCore.Functions.TriggerCallback('qb-banking:server:openAccount', function(status)
+    QBCore.Functions.TriggerCallback('dp-banking:server:openAccount', function(status)
         cb(status)
     end, data)
 end)
 
 RegisterNUICallback('renameAccount', function(data, cb)
-    QBCore.Functions.TriggerCallback('qb-banking:server:renameAccount', function(status)
+    QBCore.Functions.TriggerCallback('dp-banking:server:renameAccount', function(status)
         cb(status)
     end, data)
 end)
 
 RegisterNUICallback('deleteAccount', function(data, cb)
-    QBCore.Functions.TriggerCallback('qb-banking:server:deleteAccount', function(status)
+    QBCore.Functions.TriggerCallback('dp-banking:server:deleteAccount', function(status)
         cb(status)
     end, data)
 end)
 
 RegisterNUICallback('addUser', function(data, cb)
-    QBCore.Functions.TriggerCallback('qb-banking:server:addUser', function(status)
+    QBCore.Functions.TriggerCallback('dp-banking:server:addUser', function(status)
         cb(status)
     end, data)
 end)
 
 RegisterNUICallback('removeUser', function(data, cb)
-    QBCore.Functions.TriggerCallback('qb-banking:server:removeUser', function(status)
+    QBCore.Functions.TriggerCallback('dp-banking:server:removeUser', function(status)
         cb(status)
     end, data)
 end)
 
 -- Events
 
-RegisterNetEvent('qb-banking:client:useCard', function()
+RegisterNetEvent('dp-banking:client:useCard', function()
     if NearATM() then OpenATM() end
 end)
 
