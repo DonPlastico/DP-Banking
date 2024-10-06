@@ -1,5 +1,5 @@
 Config = {
-    useTarget = GetConvar('UseTarget', 'false') == 'true',
+    useTarget = GetConvar('UseTarget', 'false') == 'true', --No tocar si no entiendes del Target dekl qb-core
     atmModels = { 'prop_atm_01', 'prop_atm_02', 'prop_atm_03', 'prop_fleeca_atm' },
     useDailyLimit = true,
     dailyLimit = 5000,
