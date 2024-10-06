@@ -153,7 +153,7 @@ exports('GetAccountBalance', GetAccountBalance)
 
 -- Callbacks
 
-QBCore.Functions.CreateCallback('qb-banking:server:openBank', function(source, cb)
+QBCore.Functions.CreateCallback('dp-banking:server:openBank', function(source, cb)
     local src = source
     local Player, citizenid = getPlayerAndCitizenId(src)
     if not Player or not citizenid then return end
@@ -182,7 +182,7 @@ QBCore.Functions.CreateCallback('qb-banking:server:openBank', function(source, c
     cb(accounts, statements, Player.PlayerData)
 end)
 
-QBCore.Functions.CreateCallback('qb-banking:server:openATM', function(source, cb)
+QBCore.Functions.CreateCallback('dp-banking:server:openATM', function(source, cb)
     local src = source
     local Player, citizenid = getPlayerAndCitizenId(src)
     if not Player or not citizenid then return end
@@ -208,7 +208,7 @@ QBCore.Functions.CreateCallback('qb-banking:server:openATM', function(source, cb
     cb(accounts, Player.PlayerData, acceptablePins)
 end)
 
-QBCore.Functions.CreateCallback('qb-banking:server:withdraw', function(source, cb, data)
+QBCore.Functions.CreateCallback('dp-banking:server:withdraw', function(source, cb, data)
     local src = source
     local Player, citizenid = getPlayerAndCitizenId(src)
     if not Player or not citizenid then return cb({ success = false, message = Lang:t('error.error') }) end
@@ -237,7 +237,7 @@ QBCore.Functions.CreateCallback('qb-banking:server:withdraw', function(source, c
     end
 end)
 
-QBCore.Functions.CreateCallback('qb-banking:server:deposit', function(source, cb, data)
+QBCore.Functions.CreateCallback('dp-banking:server:deposit', function(source, cb, data)
     local src = source
     local Player, citizenid = getPlayerAndCitizenId(src)
     if not Player or not citizenid then return cb({ success = false, message = Lang:t('error.error') }) end
@@ -264,7 +264,7 @@ QBCore.Functions.CreateCallback('qb-banking:server:deposit', function(source, cb
     end
 end)
 
-QBCore.Functions.CreateCallback('qb-banking:server:internalTransfer', function(source, cb, data)
+QBCore.Functions.CreateCallback('dp-banking:server:internalTransfer', function(source, cb, data)
     local src = source
     local Player, citizenid = getPlayerAndCitizenId(src)
     if not Player or not citizenid then return cb({ success = false, message = Lang:t('error.error') }) end
@@ -304,7 +304,7 @@ QBCore.Functions.CreateCallback('qb-banking:server:internalTransfer', function(s
     end
 end)
 
-QBCore.Functions.CreateCallback('qb-banking:server:externalTransfer', function(source, cb, data)
+QBCore.Functions.CreateCallback('dp-banking:server:externalTransfer', function(source, cb, data)
     local src = source
     local Player, citizenid = getPlayerAndCitizenId(src)
     if not Player or not citizenid then return cb({ success = false, message = Lang:t('error.error') }) end
@@ -335,7 +335,7 @@ QBCore.Functions.CreateCallback('qb-banking:server:externalTransfer', function(s
     end
 end)
 
-QBCore.Functions.CreateCallback('qb-banking:server:orderCard', function(source, cb, data)
+QBCore.Functions.CreateCallback('dp-banking:server:orderCard', function(source, cb, data)
     local src = source
     local Player, citizenid = getPlayerAndCitizenId(src)
     if not Player or not citizenid then return cb({ success = false, message = Lang:t('error.error') }) end
@@ -348,11 +348,11 @@ QBCore.Functions.CreateCallback('qb-banking:server:orderCard', function(source, 
         cardNumber = cardNumber,
         cardPin = pinNumber,
     }
-    exports['qb-inventory']:AddItem(src, 'bank_card', 1, false, info, 'qb-banking:server:orderCard')
+    exports['qb-inventory']:AddItem(src, 'bank_card', 1, false, info, 'dp-banking:server:orderCard')
     cb({ success = true, message = Lang:t('success.card') })
 end)
 
-QBCore.Functions.CreateCallback('qb-banking:server:openAccount', function(source, cb, data)
+QBCore.Functions.CreateCallback('dp-banking:server:openAccount', function(source, cb, data)
     local src = source
     local Player, citizenid = getPlayerAndCitizenId(src)
     if not Player or not citizenid then return cb({ success = false, message = Lang:t('error.error') }) end
@@ -368,7 +368,7 @@ QBCore.Functions.CreateCallback('qb-banking:server:openAccount', function(source
     cb({ success = true, message = Lang:t('success.account') })
 end)
 
-QBCore.Functions.CreateCallback('qb-banking:server:renameAccount', function(source, cb, data)
+QBCore.Functions.CreateCallback('dp-banking:server:renameAccount', function(source, cb, data)
     local src = source
     local Player, citizenid = getPlayerAndCitizenId(src)
     if not Player or not citizenid then return cb({ success = false, message = Lang:t('error.error') }) end
@@ -385,7 +385,7 @@ QBCore.Functions.CreateCallback('qb-banking:server:renameAccount', function(sour
     cb({ success = true, message = Lang:t('success.rename') })
 end)
 
-QBCore.Functions.CreateCallback('qb-banking:server:deleteAccount', function(source, cb, data)
+QBCore.Functions.CreateCallback('dp-banking:server:deleteAccount', function(source, cb, data)
     local src = source
     local Player, citizenid = getPlayerAndCitizenId(src)
     if not Player or not citizenid then return cb({ success = false, message = Lang:t('error.error') }) end
@@ -399,7 +399,7 @@ QBCore.Functions.CreateCallback('qb-banking:server:deleteAccount', function(sour
     cb({ success = true, message = Lang:t('success.delete') })
 end)
 
-QBCore.Functions.CreateCallback('qb-banking:server:addUser', function(source, cb, data)
+QBCore.Functions.CreateCallback('dp-banking:server:addUser', function(source, cb, data)
     local src = source
     local Player, citizenid = getPlayerAndCitizenId(src)
     if not Player or not citizenid then return cb({ success = false, message = Lang:t('error.error') }) end
@@ -421,7 +421,7 @@ QBCore.Functions.CreateCallback('qb-banking:server:addUser', function(source, cb
     cb({ success = true, message = Lang:t('success.userAdd') })
 end)
 
-QBCore.Functions.CreateCallback('qb-banking:server:removeUser', function(source, cb, data)
+QBCore.Functions.CreateCallback('dp-banking:server:removeUser', function(source, cb, data)
     local src = source
     local Player, citizenid = getPlayerAndCitizenId(src)
     if not Player or not citizenid then return cb({ success = false, message = Lang:t('error.error') }) end
@@ -454,7 +454,7 @@ QBCore.Functions.CreateUseableItem('bank_card', function(source, item)
     local Player = QBCore.Functions.GetPlayer(source)
     if not Player then return end
     if Player.Functions.GetItemByName(item.name) then
-        TriggerClientEvent('qb-banking:client:useCard', source)
+        TriggerClientEvent('dp-banking:client:useCard', source)
     end
 end)
 
