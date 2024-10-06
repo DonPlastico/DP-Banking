@@ -13,6 +13,7 @@ Documentación: https://docs.qbcore.org/qbcore-documentation/qbcore-resources/qb
 
 ## Dependencias
 qb-core
+qb-inventory
 PolyZone
 oxmysql
 
