@@ -1,4 +1,14 @@
 # DP-Banking
+· En progreso ·
+Adelantos:
+
+![image](https://github.com/user-attachments/assets/76256fe2-a76a-4d99-b745-efe7a4ce9e56)
+
+
+
+
+
+
 
 ## Características
 - Maneja toda la interacción del jugador con cuentas bancarias/de trabajo/de pandillas/compartidas.
