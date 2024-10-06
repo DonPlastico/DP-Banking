@@ -109,7 +109,7 @@ const bankingApp = Vue.createApp({
                 return;
             }
             axios
-                .post("https://qb-banking/withdraw", {
+                .post("https:///withdraw", {
                     accountName: this.selectedMoneyAccount.name,
                     amount: this.selectedMoneyAmount,
                     reason: this.moneyReason,
@@ -136,7 +136,7 @@ const bankingApp = Vue.createApp({
                 return;
             }
             axios
-                .post("https://qb-banking/deposit", {
+                .post("https://dp-banking/deposit", {
                     accountName: this.selectedMoneyAccount.name,
                     amount: this.selectedMoneyAmount,
                     reason: this.moneyReason,
@@ -163,7 +163,7 @@ const bankingApp = Vue.createApp({
                 return;
             }
             axios
-                .post("https://qb-banking/internalTransfer", {
+                .post("https://dp-banking/internalTransfer", {
                     fromAccountName: this.internalFromAccount.name,
                     toAccountName: this.internalToAccount.name,
                     amount: this.internalTransferAmount,
@@ -196,7 +196,7 @@ const bankingApp = Vue.createApp({
                 return;
             }
             axios
-                .post("https://qb-banking/externalTransfer", {
+                .post("https://dp-banking/externalTransfer", {
                     fromAccountName: this.externalFromAccount.name,
                     toAccountNumber: this.externalAccountNumber,
                     amount: this.externalTransferAmount,
@@ -225,7 +225,7 @@ const bankingApp = Vue.createApp({
             }
 
             axios
-                .post("https://qb-banking/orderCard", {
+                .post("https://dp-banking/orderCard", {
                     pin: this.debitPin,
                 })
                 .then((response) => {
@@ -243,7 +243,7 @@ const bankingApp = Vue.createApp({
             }
 
             axios
-                .post("https://qb-banking/openAccount", {
+                .post("https://dp-banking/openAccount", {
                     accountName: this.createAccountName,
                     amount: this.createAccountAmount,
                 })
@@ -275,7 +275,7 @@ const bankingApp = Vue.createApp({
             }
 
             axios
-                .post("https://qb-banking/renameAccount", {
+                .post("https://dp-banking/renameAccount", {
                     oldName: this.editAccount.name,
                     newName: this.editAccountName,
                 })
@@ -299,7 +299,7 @@ const bankingApp = Vue.createApp({
             }
 
             axios
-                .post("https://qb-banking/deleteAccount", {
+                .post("https://dp-banking/deleteAccount", {
                     accountName: this.editAccount.name,
                 })
                 .then((response) => {
@@ -317,7 +317,7 @@ const bankingApp = Vue.createApp({
                 return;
             }
             axios
-                .post("https://qb-banking/addUser", {
+                .post("https://dp-banking/addUser", {
                     accountName: this.manageAccountName.name,
                     userName: this.manageUserName,
                 })
@@ -339,7 +339,7 @@ const bankingApp = Vue.createApp({
             }
 
             axios
-                .post("https://qb-banking/removeUser", {
+                .post("https://dp-banking/removeUser", {
                     accountName: this.manageAccountName.name,
                     userName: this.manageUserName,
                 })
