@@ -2,12 +2,14 @@
 · En progreso ·
 Adelantos:
 
+# Inicio
 ![image](https://github.com/user-attachments/assets/76256fe2-a76a-4d99-b745-efe7a4ce9e56)
-
-
-
-
-
+# Cuentas
+![image](https://github.com/user-attachments/assets/398a176f-9acf-447e-a5f7-85f8be20755a)
+# Depositar/Retirar
+![image](https://github.com/user-attachments/assets/138d4e51-ea67-41bf-b3eb-fa1fccba5cc1)
+# Opciones 
+![image](https://github.com/user-attachments/assets/f66f9d3e-db52-4d3a-8c23-97c25318194d)
 
 
 ## Características
