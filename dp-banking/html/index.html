@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>qb-banking</title>
+        <link rel="stylesheet" href="style.css" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap" />
+        <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.2/axios.min.js"></script>
+    </head>
+    <body>
+        <div id="app">
+            <div class="banking-container" v-show="isBankOpen">
+                <div class="main-content">
+                    <div class="nav-bar">
+                        <div class="nav-options">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="logo" width="50" height="50" viewBox="0 0 24 24">
+                                <path fill="black" d="M21 21V5H3v8H1V5q0-.825.588-1.412T3 3h18q.825 0 1.413.588T23 5v14q0 .825-.587 1.413T21 21M9 14q-1.65 0-2.825-1.175T5 10t1.175-2.825T9 6t2.825 1.175T13 10t-1.175 2.825T9 14m0-2q.825 0 1.413-.587T11 10t-.587-1.412T9 8t-1.412.588T7 10t.588 1.413T9 12M1 22v-2.8q0-.85.438-1.562T2.6 16.55q1.55-.775 3.15-1.162T9 15t3.25.388t3.15 1.162q.725.375 1.163 1.088T17 19.2V22zm2-2h12v-.8q0-.275-.137-.5t-.363-.35q-1.35-.675-2.725-1.012T9 17t-2.775.338T3.5 18.35q-.225.125-.363.35T3 19.2zm6 0" />
+                            </svg>
+                            <div class="nav-option" :class="{selected: activeView === 'cuentas'}" @click="setActiveView('cuentas')">Cuenta</div>
+                            <div class="nav-option" style="color: black; background: transparent; box-shadow: none;" :class="{'selected': activeView === 'home'}" @click="setActiveView('home')">INICIO</div>
+                            <div class="nav-option" style="color: black; background: transparent; box-shadow: none;" :class="{selected: activeView === 'money'}" @click="setActiveView('money')">DEPOSITAR / RETIRAR</div>
+                            <div class="nav-option" style="color: black; background: transparent; box-shadow: none;" :class="{selected: activeView === 'transfer'}" @click="setActiveView('transfer')">TRANSFERENCIA</div>
+                            <div class="nav-option" style="color: black; background: transparent; box-shadow: none;" :class="{selected: activeView === 'accountOptions'}" @click="setActiveView('accountOptions')">OPCIONES DE CUENTA</div>
+                        </div>
+                        <div class="notification-container" v-if="notification">
+                            <div :class="['notification', notification.type]">{{ notification.message }}</div>
+                        </div>
+                        <button class="action-button" @click="closeApplication()">Desconectarse
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                <g fill="none">
+                                    <path d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z" />
+                                    <path fill="currentColor" d="M12 2.5a1.5 1.5 0 0 1 0 3H7a.5.5 0 0 0-.5.5v12a.5.5 0 0 0 .5.5h4.5a1.5 1.5 0 0 1 0 3H7A3.5 3.5 0 0 1 3.5 18V6A3.5 3.5 0 0 1 7 2.5Zm6.06 5.61l2.829 2.83a1.5 1.5 0 0 1 0 2.12l-2.828 2.83a1.5 1.5 0 1 1-2.122-2.122l.268-.268H12a1.5 1.5 0 0 1 0-3h4.207l-.268-.268a1.5 1.5 0 1 1 2.122-2.121Z" />
+                                </g>
+                            </svg>
+                        </button>
+                    </div>
+                    <div v-if="activeView === 'cuentas'" >
+                        <div class="sidebar-accounts">
+                            <ul>
+                                <li v-for="account in accounts" :key="account.name" :class="{ 'sidebar-selected': account.name === selectedAccountStatement }" @click="selectAccount(account)">{{ account.name }}: <span class="positive-balance">${{ formatCurrency(account.balance) }}</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div v-if="activeView === 'home'">                                   
+                        <div class="efectivo1">En efectivo:
+                            <span>${{ formatCurrency(playerCash) }}</span>
+                        </div>
+                    </div>
+                    <div v-if="activeView === 'home'" class="opcionesrapidas1">                        
+                        <div class="opcionesrapidas2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                <path fill="currentColor" fill-opacity="0.3" d="M18.5 10.2c0 2.57-2.1 5.79-6.16 9.51l-.34.3l-.34-.31C7.6 15.99 5.5 12.77 5.5 10.2c0-3.84 2.82-6.7 6.5-6.7s6.5 2.85 6.5 6.7" />
+                                <path fill="currentColor" d="M12 11c1.33 0 4 .67 4 2v.16c-.97 1.12-2.4 1.84-4 1.84s-3.03-.72-4-1.84V13c0-1.33 2.67-2 4-2m0-1c-1.1 0-2-.9-2-2s.9-2 2-2s2 .9 2 2s-.9 2-2 2m6 .2C18 6.57 15.35 4 12 4s-6 2.57-6 6.2c0 2.34 1.95 5.44 6 9.14c4.05-3.7 6-6.8 6-9.14M12 2c4.2 0 8 3.22 8 8.2c0 3.32-2.67 7.25-8 11.8c-5.33-4.55-8-8.48-8-11.8C4 5.22 7.8 2 12 2" />
+                            </svg>
+                            &nbsp;&nbsp; INFORMACIÓN DE CUENTA:                        
+                        </div>
+                        <table>
+                            <tr align="center">
+                                <td style="width: 150px;">
+                                    <button class="botones">DEPOSITAR $100</button>
+                                    <button class="botones">RETIRAR $100</button>
+                                </td>
+                                <td style="width: 150px;">
+                                    <button class="botones">DEPOSITAR $1,000</button>
+                                    <button class="botones">RETIRAR $1,000</button>
+                                </td>
+                                <td style="width: 150px;">
+                                    <button class="botones">DEPOSITAR $10,000</button>
+                                    <button class="botones">RETIRAR $10,000</button>
+                                </td>
+                            </tr>                                            
+                        </table>
+                    </div>
+                    <div v-if="activeView === 'home'" class="historial1">
+                        <div class="historial2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="24" viewBox="0 0 640 512">
+                                <path fill="currentColor" d="M535 41c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l64 64c4.5 4.5 7 10.6 7 17s-2.5 12.5-7 17l-64 64c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l23-23l-174-.2c-13.3 0-24-10.7-24-24s10.7-24 24-24h174.1zM105 377l-23 23h174c13.3 0 24 10.7 24 24s-10.7 24-24 24H81.9l23 23c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0L7 441c-4.5-4.5-7-10.6-7-17s2.5-12.5 7-17l64-64c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9zM96 64h241.9c-3.7 7.2-5.9 15.3-5.9 24c0 28.7 23.3 52 52 52h117.4c-4 17 .6 35.5 13.8 48.8c20.3 20.3 53.2 20.3 73.5 0l19.3-19.3V384c0 35.3-28.7 64-64 64H302.1c3.7-7.2 5.9-15.3 5.9-24c0-28.7-23.3-52-52-52H138.6c4-17-.6-35.5-13.8-48.8c-20.3-20.3-53.2-20.3-73.5 0L32 342.5V128c0-35.3 28.7-64 64-64m64 64H96v64c35.3 0 64-28.7 64-64m384 192c-35.3 0-64 28.7-64 64h64zm-224 32a96 96 0 1 0 0-192a96 96 0 1 0 0 192" />
+                            </svg>
+                            &nbsp;&nbsp; HISTORIAL:                        
+                        </div>
+                        <div class="listado">
+                            <table border="2" bordercolor="white" v-for="statement in statements[selectedAccountStatement]" :key="statement.id">
+                                <tr>
+                                    <td style="width: 150px;"><span>{{ formatDate(statement.date) }}</span></td>
+                                    <td style="width: 150px;"><span>{{ statement.user }}</span></td>
+                                    <td style="width: 150px;"><span>{{ statement.reason }}</span></td>
+                                    <td style="width: 150px;"><span :class="balanceClass(statement.type)">{{ statement.amount }}</span></td>
+                                </tr>                                            
+                            </table>
+                        </div>
+                    </div>
+                    <div v-if="activeView === 'home'" class="infocuenta1">                        
+                        <div class="infocuenta2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                <path fill="currentColor" fill-opacity="0.3" d="M18.5 10.2c0 2.57-2.1 5.79-6.16 9.51l-.34.3l-.34-.31C7.6 15.99 5.5 12.77 5.5 10.2c0-3.84 2.82-6.7 6.5-6.7s6.5 2.85 6.5 6.7" />
+                                <path fill="currentColor" d="M12 11c1.33 0 4 .67 4 2v.16c-.97 1.12-2.4 1.84-4 1.84s-3.03-.72-4-1.84V13c0-1.33 2.67-2 4-2m0-1c-1.1 0-2-.9-2-2s.9-2 2-2s2 .9 2 2s-.9 2-2 2m6 .2C18 6.57 15.35 4 12 4s-6 2.57-6 6.2c0 2.34 1.95 5.44 6 9.14c4.05-3.7 6-6.8 6-9.14M12 2c4.2 0 8 3.22 8 8.2c0 3.32-2.67 7.25-8 11.8c-5.33-4.55-8-8.48-8-11.8C4 5.22 7.8 2 12 2" />
+                            </svg>
+                            &nbsp;&nbsp; INFORMACIÓN DE CUENTA:                        
+                        </div>
+                        <div class="nombre-jugador">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M12 12q-1.65 0-2.825-1.175T8 8t1.175-2.825T12 4t2.825 1.175T16 8t-1.175 2.825T12 12m-8 8v-2.8q0-.85.438-1.562T5.6 14.55q1.55-.775 3.15-1.162T12 13t3.25.388t3.15 1.162q.725.375 1.163 1.088T20 17.2V20z" />
+                            </svg>&nbsp;{{ playerName }}
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M22 10v7a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3v-7z" class="duoicon-secondary-layer" opacity="0.3" />
+                                <path fill="currentColor" d="M19 4a3 3 0 0 1 3 3v1H2V7a3 3 0 0 1 3-3zm-1 10h-3a1 1 0 1 0 0 2h3a1 1 0 1 0 0-2" class="duoicon-primary-layer" />
+                            </svg>&nbsp;{{ accountNumber }}
+                        </div>
+                    </div>
+                    
+
+
+
+                    <div v-if="activeView === 'money'">
+                        <div class="manage-money">
+                            <td>
+                                <div class="cuadro1">
+                                    <div class="cuadro2" for="fromAccount">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16">
+                                            <path fill="currentColor" d="M7 14s-1 0-1-1s1-4 5-4s5 3 5 4s-1 1-1 1zm4-6a3 3 0 1 0 0-6a3 3 0 0 0 0 6m-5.784 6A2.24 2.24 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.3 6.3 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1zM4.5 8a2.5 2.5 0 1 0 0-5a2.5 2.5 0 0 0 0 5" />
+                                        </svg>
+                                        &nbsp;&nbsp; Selecciona una cuenta:</div>
+                                    <select id="fromAccount" v-model="selectedMoneyAccount">
+                                        <option v-for="account in accounts" :key="account.name" :value="account">{{ account.name }}</option>
+                                    </select>
+                                </div>
+                            </td>
+                            <tr align="center">
+                                <td>
+                                    <div class="cuadro1">
+                                        <div class="cuadro2" for="amount">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512">
+                                                <rect width="448" height="256" x="32" y="80" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="32" rx="16" ry="16" transform="rotate(180 256 208)" />
+                                                <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M64 384h384M96 432h320" />
+                                                <circle cx="256" cy="208" r="80" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" />
+                                                <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M480 160a80 80 0 0 1-80-80M32 160a80 80 0 0 0 80-80m368 176a80 80 0 0 0-80 80M32 256a80 80 0 0 1 80 80" />
+                                            </svg>
+                                            &nbsp;&nbsp; Cantidad:</div>
+                                        <input type="number" id="amount" v-model="selectedMoneyAmount" />
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr align="center">
+                                <td>
+                                    <div class="cuadro1">
+                                        <div class="cuadro2" for="money-reason">Razón: (Opcional)</div>
+                                        <input type="text" id="money-reason" v-model="moneyReason" />
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr align="center">
+                                <td>
+                                    <button class="botones2" @click="depositMoney">DEPOSITAR</button>
+                                </td>
+                                <td></td>
+                                <td>
+                                    <button class="botones2" @click="withdrawMoney">RETIRAR</button>
+                                </td>
+                            </tr>
+                        </div>
+                    </div>
+
+
+                    <div v-if="activeView === 'transfer'" class="transfer">
+                        <div class="transfer-header">
+                            <div class="nav-option" :class="{selected: transferType === 'internal'}" @click="setTransferType('internal')">Internal</div>
+                            <span class="money-title">Transfer</span>
+                            <div class="nav-option" :class="{selected: transferType === 'external'}" @click="setTransferType('external')">External</div>
+                        </div>
+                        <div v-if="transferType === 'internal'" class="transfer-options">
+                            <label for="internalFrom">Account:</label>
+                            <select id="internalFrom" v-model="internalFromAccount">
+                                <option v-for="account in accounts" :key="account.name" :value="account">{{ account.name }}</option>
+                            </select>
+                            <label for="internalTo">Account:</label>
+                            <select id="internalTo" v-model="internalToAccount">
+                                <option v-for="account in accounts" :key="account.name" :value="account">{{ account.name }}</option>
+                            </select>
+                            <label for="internalAmount">Amount:</label>
+                            <input type="number" id="internalAmount" v-model="internalTransferAmount" />
+                            <label for="transfer-reason">Reason:</label>
+                            <input type="text" id="transfer-reason" v-model="transferReason" />
+                            <button class="action-button" @click="internalTransfer">Transfer</button>
+                        </div>
+                        <div v-if="transferType === 'external'" class="transfer-options">
+                            <label for="externalAccountNumber">Account Number:</label>
+                            <input type="text" id="externalAccountNumber" v-model="externalAccountNumber" />
+                            <label for="externalFrom">Account:</label>
+                            <select id="externalFrom" v-model="externalFromAccount">
+                                <option v-for="account in accounts" :key="account.name" :value="account">{{ account.name }}</option>
+                            </select>
+                            <label for="externalAmount">Amount:</label>
+                            <input type="number" id="externalAmount" v-model="externalTransferAmount" />
+                            <label for="transfer-reason">Reason:</label>
+                            <input type="text" id="transfer-reason" v-model="transferReason" />
+                            <button class="action-button" @click="externalTransfer">Transfer</button>
+                        </div>
+                    </div>
+                    <div v-if="activeView === 'accountOptions'" class="account-options">
+                        <div class="debit-card">
+                            <div>Order Debit Card</div>
+                            <label for="pin-number">Pin Number:</label>
+                            <input type="number" id="pin-number" v-model="debitPin" />
+                            <div class="card-buttons">
+                                <button class="action-button" @click="orderDebitCard">Order</button>
+                            </div>
+                        </div>
+                        <div class="create-account">
+                            <div>Open Shared Account</div>
+                            <div class="options-labels">
+                                <label for="createAccountName">Name:</label>
+                                <label for="createAccountAmount">Amount:</label>
+                            </div>
+                            <div class="options-inputs">
+                                <input type="text" id="createAccountName" v-model="createAccountName" />
+                                <input type="number" id="createAccountAmount" v-model="createAccountAmount" />
+                            </div>
+                            <div class="card-buttons">
+                                <button class="action-button" @click="openAccount">Open Account</button>
+                            </div>
+                        </div>
+                        <div class="edit-account">
+                            <div>Manage Shared Account</div>
+                            <div class="options-labels">
+                                <label for="editAccount">Account:</label>
+                                <label for="editAccountName">Name:</label>
+                            </div>
+                            <div class="options-inputs">
+                                <select id="editAccount" v-model="editAccount">
+                                    <option v-for="account in accounts.filter(a => a.type === 'shared')" :key="account.name" :value="account">{{ account.name }}</option>
+                                </select>
+                                <input type="text" id="editAccountName" v-model="editAccountName" />
+                            </div>
+                            <div class="card-buttons">
+                                <button class="action-button" @click="deleteAccount">Delete</button>
+                                <button class="action-button" @click="renameAccount">Rename</button>
+                            </div>
+                        </div>
+                        <div class="manage-account">
+                            <div>Manage Account Users</div>
+                            <div class="options-labels">
+                                <label for="manageAccountName">Account:</label>
+                                <label for="manageUserName">Citizen ID:</label>
+                            </div>
+                            <div class="options-inputs">
+                                <select id="manageAccountName" v-model="manageAccountName">
+                                    <option v-for="account in accounts.filter(a => a.type === 'shared')" :key="account.name" :value="account">{{ account.name }}</option>
+                                </select>
+                                <div class="combo-input">
+                                    <input type="text" id="manageUserName" v-model="manageUserName" @input="filterUsers" @focus="showUsersDropdown = true" @blur="hideDropdown" />
+                                    <div class="dropdown-container" v-if="showUsersDropdown">
+                                        <div class="list-container">
+                                            <ul>
+                                                <li v-for="user in filteredUsers" @click="selectUser(user)">{{ user }}</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-buttons">
+                                <button class="action-button" @click="addUserToAccount">Add</button>
+                                <button class="action-button" @click="removeUserFromAccount">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="banking-container" v-show="isATMOpen">
+                <div class="sidebar">
+                    <div class="sidebar-header">
+                        {{ playerName }}<br />
+                        Cash: <span class="positive-balance">${{ formatCurrency(playerCash) }}</span>
+                    </div>
+                    <div class="sidebar-accounts">
+                        <ul>
+                            <li v-for="account in accounts" :key="account.name">{{ account.name }}: <span class="positive-balance">${{ formatCurrency(account.balance) }}</span></li>
+                        </ul>
+                    </div>
+                    <button class="action-button" @click="closeApplication()">Logout</button>
+                    <div class="sidebar-footer">Account Number: {{ accountNumber }}</div>
+                </div>
+                <div class="main-content">
+                    <div class="money">
+                        <div class="manage-money">
+                            <div class="money-title">Withdraw</div>
+                            <label for="fromAccount">Account:</label>
+                            <select id="fromAccount" v-model="selectedMoneyAccount">
+                                <option v-for="account in accounts" :key="account.name" :value="account">{{ account.name }}</option>
+                            </select>
+                            <label for="amount">Amount:</label>
+                            <input type="number" id="amount" v-model="selectedMoneyAmount" />
+                            <label for="money-reason">Reason:</label>
+                            <input type="text" id="money-reason" v-model="moneyReason" />
+                            <div class="card-buttons">
+                                <button class="action-button" @click="withdrawMoney">Withdraw</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div v-if="showPinPrompt" class="pin-prompt">
+                <div class="pin-input">
+                    <input type="password" v-model="enteredPin" placeholder="Enter PIN" readonly />
+                </div>
+                <div class="number-pad">
+                    <button v-for="number in 9" :key="number" @click="appendNumber(number)">{{ number }}</button>
+                    <button @click="appendNumber(0)">0</button>
+                </div>
+                <div class="card-buttons">
+                    <button class="action-button" @click="enteredPin = ''">Clear</button>
+                    <button class="action-button" @click="pinPrompt(enteredPin)">Submit</button>
+                </div>
+            </div>
+        </div>
+    </body>
+    <script src="script.js"></script>
+</html>
