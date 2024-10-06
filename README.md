@@ -13,9 +13,9 @@ Documentación: https://docs.qbcore.org/qbcore-documentation/qbcore-resources/qb
 
 ## Dependencias
 qb-core
-qb-inventory
-PolyZone
-oxmysql
+<br>qb-inventory
+<br>PolyZone
+<br>oxmysql
 
 # Licencia
 
