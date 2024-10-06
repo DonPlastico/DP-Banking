@@ -1,6 +1,6 @@
 # DP-Banking
 · En progreso ·
-Adelantos:
+<br>Adelantos:
 
 # Inicio
 ![image](https://github.com/user-attachments/assets/76256fe2-a76a-4d99-b745-efe7a4ce9e56)
