@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DP-Banking</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.2/axios.min.js"></script>
+  <audio id="clickSound" preload="auto">
+    <source src="sounds/click.wav" type="audio/wav">
+  </audio>
+  <audio id="notificationSound" preload="auto">
+    <source src="sounds/notification.wav" type="audio/wav">
+  </audio>
+  <audio id="transactionSound" preload="auto">
+    <source src="sounds/transaction.wav" type="audio/wav">
+  </audio>
+  <audio id="errorSound" preload="auto">
+    <source src="sounds/error.wav" type="audio/wav">
+  </audio>
+  <audio id="openSound" preload="auto">
+    <source src="sounds/open.wav" type="audio/wav">
+  </audio>
+  <audio id="closeSound" preload="auto">
+    <source src="sounds/close.wav" type="audio/wav">
+  </audio>
+  <audio id="selectSound" preload="auto">
+    <source src="sounds/select.wav" type="audio/wav">
+  </audio>
+</head>
+
+<body>
+  <div id="app">
+    <div id="loading-screen" v-show="isLoading">
+      <div class="loading-content">
+        <div class="loading-spinner">
+          <i class="fas fa-spinner fa-spin"></i>
+        </div>
+        <div class="loading-text">{{ loadingText }}</div>
+      </div>
+    </div>
+    <div class="banking-container" v-show="isBankOpen">
+      <div class="main-content">
+        <div class="nav-bar">
+          <div class="nav-options">
+            <div class="nav-option" :class="{selected: activeView === 'home'}" @click="setActiveView('home')">MIS
+              CUENTAS</div>
+            <div class="nav-option" :class="{selected: activeView === 'withdraw'}" @click="setActiveView('withdraw')">
+              RETIRAR DINERO</div>
+            <div class="nav-option" :class="{selected: activeView === 'deposit'}" @click="setActiveView('deposit')">
+              DEPOSITAR DINERO</div>
+            <div class="nav-option" :class="{selected: activeView === 'transfer'}" @click="setActiveView('transfer')">
+              FRANSFERENCIA</div>
+            <div class="nav-option" :class="{selected: activeView === 'accountOptions'}"
+              @click="setActiveView('accountOptions')">OPCIONES DE LAS CUENTAS</div>
+          </div>
+          <div class="notification-container" v-if="notification">
+            <div :class="['notification', notification.type]">{{ notification.message }}</div>
+          </div>
+          <button class="action-button logout-button" @click="closeApplication()">DESCONECTARSE</button>
+        </div>
+        <div v-if="activeView === 'home'" class="home-container">
+          <div class="balance-header">
+            <div class="balance-section">
+              <div class="balance-title">EN ESTA CUENTA:</div>
+              <div class="balance-amount positive-balance">{{ formatCurrency(accounts.find(acc => acc.name
+                === selectedAccountStatement)?.balance || 0) }}</div>
+            </div>
+            <div class="balance-section">
+              <div class="balance-title">EN EFECTIVO:</div>
+              <div class="balance-amount positive-balance">{{ formatCurrency(playerCash) }}</div>
+            </div>
+          </div>
+          <div class="quick-actions">
+            <h2>OPCIONES RÁPIDAS</h2>
+            <div class="quick-actions-buttons">
+              <button class="quick-action-button" @click="quickDeposit(100)">DEPOSITAR 100 €</button>
+              <button class="quick-action-button" @click="quickDeposit(1000)">DEPOSITAR 1.000 €</button>
+              <button class="quick-action-button" @click="quickDeposit(10000)">DEPOSITAR 10.000 €</button>
+              <button class="quick-action-button" @click="quickWithdraw(100)">RETIRAR 100 €</button>
+              <button class="quick-action-button" @click="quickWithdraw(1000)">RETIRAR 1.000 €</button>
+              <button class="quick-action-button" @click="quickWithdraw(10000)">RETIRAR 10.000 €</button>
+            </div>
+          </div>
+          <div class="transactions-container">
+            <h2>LISTA DE TRANSACCIONES</h2>
+            <div class="transactions-header">
+              <div>IMPORTE</div>
+              <div>FECHA</div>
+              <div>CUENTA DESTINO</div>
+              <div>CUENTA ORIGEN</div>
+              <div>CONCEPTO</div>
+            </div>
+            <div class="transactions-list">
+              <div v-if="!statements[selectedAccountStatement] || statements[selectedAccountStatement].length === 0"
+                class="no-transactions">
+                NO SE HA REALIZADO NINGUNA TRANSACCIÓN
+              </div>
+              <div v-else class="transaction-item"
+                v-for="statement in [...(statements[selectedAccountStatement] || [])].reverse()" :key="statement.id">
+                <div :class="balanceClass(statement.type)">{{ formatCurrency(statement.amount) }}</div>
+                <div>{{ formatDate(statement.date) }}</div>
+                <div>{{ statement.type === 'deposit' ? selectedAccountStatement :
+                  statement.targetAccount || 'N/A' }}</div>
+                <div>{{ statement.type === 'withdraw' ? selectedAccountStatement :
+                  statement.sourceAccount || accountNumber }}</div>
+                <div>{{ statement.reason }}</div>
+              </div>
+            </div>
+          </div>
+          <div class="transactions-footer">
+            <div class="footer-player-info">
+              <h2>INFORMACIÓN</h2>
+              <div class="player-name-account">
+                <span class="player-name"><strong style="color: white;">Nombre del titular: </strong> {{
+                  playerName }}</span>
+                <span class="account-number"><strong style="color: white;">Número de Cuenta: </strong>
+                  {{ accountNumber }}</span>
+              </div>
+            </div>
+            <div class="footer-accounts-list">
+              <h2>CUENTAS DISPONIBLES</h2>
+              <div class="accounts-list-compact">
+                <div class="account-item-compact clickable" v-for="account in accounts" :key="account.name"
+                  @click="selectAccount(account)" :class="{ 'selected': account.name === selectedAccountStatement }">
+                  <div class="account-name-balance">
+                    <span class="account-name">{{ account.name }}</span>
+                    <span class="account-balance positive-balance">{{
+                      formatCurrency(account.balance) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-if="activeView === 'withdraw'" class="withdraw-container">
+          <div class="balance-header">
+            <div class="balance-section">
+              <div class="balance-title">EN ESTA CUENTA:</div>
+              <div class="balance-amount positive-balance">
+                {{ formatCurrency(selectedMoneyAccount?.balance || 0) }}
+              </div>
+            </div>
+            <div class="balance-section">
+              <div class="balance-title">EN EFECTIVO:</div>
+              <div class="balance-amount positive-balance">{{ formatCurrency(playerCash) }}</div>
+            </div>
+          </div>
+          <div class="withdraw-header">
+            <h2>RETIRADAS</h2>
+            <p>Para retirar dinero de tu cuenta bancaria, es necesario que primero realices una
+              transferencia.<br>
+              Debes iniciar una transacción de transferencia desde tu cuenta bancaria a otra cuenta de tu
+              propiedad o a la cuenta de otra persona o entidad financiera. Asegúrate de verificar los
+              detalles de la transacción, como la cantidad que deseas transferir y los datos de la cuenta
+              receptora, para evitar errores o retrasos en el proceso. Una vez completada la
+              transferencia, podrás acudir a una sucursal bancaria, utilizar un cajero automático o
+              realizar una transacción en línea para retirar el dinero de tu cuenta en efectivo o mediante
+              otros medios de pago disponibles.</p>
+          </div>
+          <div class="withdraw-fields">
+            <div class="withdraw-field">
+              <div class="field-row">
+                <h3>ELEGIR CUENTA</h3>
+                <select v-model="selectedMoneyAccount">
+                  <option v-for="account in accounts" :key="account.name" :value="account">{{
+                    account.name }}</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="withdraw-field">
+              <div class="field-row">
+                <h3>CANTIDAD A RETIRAR</h3>
+                <input type="number" v-model="selectedMoneyAmount" />
+              </div>
+            </div>
+
+            <div class="withdraw-field">
+              <div class="field-row">
+                <h3>RAZÓN/CONCEPTO</h3>
+                <textarea v-model="moneyReason" class="form-control resize-vertical"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="withdraw-actions">
+            <button class="withdraw-button" @click="withdrawMoney"><i class="fa-solid fa-money-bill"></i>RETIRAR
+              CANTIDAD</button>
+          </div>
+        </div>
+        <div v-if="activeView === 'deposit'" class="withdraw-container">
+          <div class="balance-header">
+            <div class="balance-section">
+              <div class="balance-title">EN ESTA CUENTA:</div>
+              <div class="balance-amount positive-balance">
+                {{ formatCurrency(selectedMoneyAccount?.balance || 0) }}
+              </div>
+            </div>
+            <div class="balance-section">
+              <div class="balance-title">EN EFECTIVO:</div>
+              <div class="balance-amount positive-balance">{{ formatCurrency(playerCash) }}</div>
+            </div>
+          </div>
+
+          <div class="withdraw-header">
+            <h2>DEPÓSITOS</h2>
+            <p>Si deseas depositar dinero en tu cuenta bancaria, puedes hacerlo de varias maneras. Una
+              opción es realizar una transferencia desde otra cuenta de tu propiedad o desde la cuenta de
+              otra persona o entidad financiera. Asegúrate de verificar los detalles de la transferencia,
+              incluyendo la cantidad que deseas depositar y los datos de la cuenta receptora, para evitar
+              errores o retrasos en el proceso. También puedes realizar un depósito en efectivo o con un
+              cheque en una sucursal bancaria o a través de un cajero automático, dependiendo de las
+              opciones disponibles en tu banco. Recuerda que, en algunos casos, es posible que se apliquen
+              cargos o restricciones a los depósitos en efectivo o con cheque, por lo que es recomendable
+              que consultes las políticas y condiciones de tu banco antes de realizar el depósito.</p>
+          </div>
+
+          <div class="withdraw-fields">
+            <div class="withdraw-field">
+              <div class="field-row">
+                <h3>ELEGIR CUENTA</h3>
+                <select v-model="selectedMoneyAccount">
+                  <option v-for="account in accounts" :key="account.name" :value="account">{{
+                    account.name }}</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="withdraw-field">
+              <div class="field-row">
+                <h3>CANTIDAD A DEPOSITAR</h3>
+                <input type="number" v-model="selectedMoneyAmount" />
+              </div>
+            </div>
+
+            <div class="withdraw-field">
+              <div class="field-row">
+                <h3>RAZÓN/CONCEPTO</h3>
+                <textarea v-model="moneyReason" class="form-control resize-vertical"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="withdraw-actions">
+            <button class="withdraw-button" @click="depositMoney"><i class="fa-solid fa-money-bill"></i>DEPOSITAR
+              CANTIDAD</button>
+            <button class="withdraw-button" @click="distributeCashToAllAccounts"><i class="fas fa-coins"></i> DISTRIBUIR
+              TODO EL EFECTIVO</button>
+          </div>
+        </div>
+
+        <!-- Modal de Confirmacion de Distribución -->
+        <div class="modal" v-if="showDistributeConfirmationModal">
+          <div class="modal-content">
+            <h3>Confirmar Distribución</h3>
+            <p>¿Estás seguro de que quieres distribuir <span class="confirm-amount">{{ formatCurrency(playerCash)
+                }}</span> en partes iguales entre tus <span class="confirm-count">{{ accounts.length }}</span> cuentas?
+            </p>
+            <div class="modal-actions">
+              <button class="modal-button confirm-btn" @click="confirmDistribution">
+                <i class="fas fa-check"></i> CONFIRMAR
+              </button>
+              <button class="modal-button cancel-button" @click="cancelDistribution">
+                <i class="fas fa-times"></i> CANCELAR
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="activeView === 'transfer'" class="withdraw-container">
+          <div class="withdraw-header">
+            <h2>TRANSFERENCIAS</h2>
+            <p>Si deseas transferir dinero a otra cuenta bancaria, puedes hacerlo de varias maneras. Una
+              opción es realizar una transferencia electrónica a través de la banca en línea o de la
+              aplicación móvil de tu banco. Para ello, deberás ingresar el número de la cuenta receptora y
+              la cantidad que deseas transferir. Asegúrate de verificar los detalles de la transacción
+              antes de confirmarla, para evitar errores o retrasos en el proceso. También puedes realizar
+              una transferencia en una sucursal bancaria, donde un representante del banco podrá ayudarte
+              a completar la transacción y proporcionarte información adicional, si es necesario. Recuerda
+              que en algunos casos, puede haber cargos o límites para las transferencias, por lo que es
+              recomendable que consultes las políticas y condiciones de tu banco antes de realizar la
+              transferencia.</p>
+
+            <div class="transfer-type-selector compact">
+              <div class="transfer-type-btn" :class="{active: transferType === 'internal'}"
+                @click="setTransferType('internal')">
+                <i class="fas fa-exchange-alt"></i> INTERNA
+              </div>
+              <div class="transfer-type-btn" :class="{active: transferType === 'external'}"
+                @click="setTransferType('external')">
+                <i class="fas fa-external-link-alt"></i> EXTERNA
+              </div>
+            </div>
+          </div>
+
+          <div class="withdraw-fields">
+            <!-- Campo común: Cuenta Origen (para ambos tipos) -->
+            <div class="withdraw-field">
+              <div class="field-row">
+                <h3>CUENTA ORIGEN</h3>
+                <select v-model="selectedFromAccount">
+                  <option v-for="account in accounts" :key="account.name" :value="account">{{
+                    account.name }}</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Campo específico para transferencia interna -->
+            <div v-if="transferType === 'internal'" class="withdraw-field">
+              <div class="field-row">
+                <h3>CUENTA DESTINO</h3>
+                <select v-model="internalToAccount">
+                  <option v-for="account in accounts" :key="account.name" :value="account">{{
+                    account.name }}</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Campo específico para transferencia externa -->
+            <div v-if="transferType === 'external'" class="withdraw-field">
+              <div class="field-row">
+                <h3>NÚMERO DE CUENTA DESTINO</h3>
+                <input type="text" v-model="externalAccountNumber" placeholder="Ingresa el número de cuenta destino" />
+              </div>
+            </div>
+
+            <!-- Campos comunes -->
+            <div class="withdraw-field">
+              <div class="field-row">
+                <h3>CANTIDAD</h3>
+                <input type="number" v-model="transferAmount" />
+              </div>
+            </div>
+
+            <div class="withdraw-field">
+              <div class="field-row">
+                <h3>CONCEPTO</h3>
+                <textarea v-model="transferReason" class="form-control resize-vertical"
+                  placeholder="Motivo de la transferencia"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="withdraw-actions">
+            <button class="withdraw-button" @click="handleTransfer">
+              COMPLETAR TRANSFERENCIA
+            </button>
+          </div>
+        </div>
+        <div v-if="activeView === 'accountOptions'" class="account-options-container">
+          <div class="account-options-header">
+            <h2>OPCIONES DE CUENTA</h2>
+            <p>Como cliente de FLEECA BANK, podrás administrar todos los aspectos de tu experiencia bancaria
+              a través de la sección de opciones de tu cuenta. Si tienes alguna pregunta o necesitas ayuda
+              con el proceso, no dudes en contactar al servicio al cliente de FLEECA BANK, quienes estarán
+              dispuestos a asistirte en todo momento. Recuerda revisar cuidadosamente las políticas y
+              términos de uso del banco antes de realizar cualquier transacción financiera en línea.</p>
+          </div>
+
+          <div class="account-tabs">
+            <div class="tab-buttons">
+              <button @click="activeAccountTab = 'shared'" :class="{active: activeAccountTab === 'shared'}">
+                <i class="fas fa-users"></i> Cuentas Compartidas
+              </button>
+              <button @click="activeAccountTab = 'users'" :class="{active: activeAccountTab === 'users'}">
+                <i class="fas fa-user-cog"></i> Gestión de Usuarios
+              </button>
+            </div>
+
+            <!-- Pestaña de Cuentas Compartidas -->
+            <div v-if="activeAccountTab === 'shared'" class="tab-content shared-accounts-tab">
+              <div class="account-card-list">
+                <div v-for="account in sharedAccounts" :key="account.name" class="account-card">
+                  <div class="account-card-header">
+                    <div class="account-icon">
+                      <i class="fas fa-piggy-bank"></i>
+                    </div>
+                    <div class="account-info">
+                      <h3>{{ account.name }}</h3>
+                      <span class="balance">{{ formatCurrency(account.balance) }}</span>
+                    </div>
+                  </div>
+
+                  <div class="account-details">
+                    <div class="users-preview">
+                      <span v-for="(user, index) in getAccountUsers(account)" :key="index" class="user-tag"
+                        v-if="index < 3">
+                        {{ getUserInitials(user) }}
+                      </span>
+                      <span class="more-users" v-if="getAccountUsers(account).length > 3">
+                        +{{ getAccountUsers(account).length - 3 }}
+                      </span>
+                    </div>
+
+                    <div class="account-actions">
+                      <button @click="selectAccountToEdit(account)" class="action-btn edit">
+                        <i class="fas fa-edit"></i> Editar
+                      </button>
+                      <button @click="confirmDeleteAccount(account)" class="action-btn delete">
+                        <i class="fas fa-trash"></i> Eliminar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-if="accounts.length < 5" class="account-card add-account" @click="showCreateAccountModal = true">
+                  <div class="add-account-content">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Crear nueva cuenta</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Modal de Edición de Cuenta -->
+              <div v-if="showEditAccountModal" class="custom-modal">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h3>Editar Cuenta</h3>
+                    <button @click="showEditAccountModal = false" class="close-btn">&times;</button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="form-group">
+                      <label>Nuevo nombre de la cuenta:</label>
+                      <input type="text" v-model="editAccountName" class="styled-input"
+                        placeholder="Ingrese nuevo nombre">
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button @click="renameAccount" class="confirm-btn">
+                      <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                    <button @click="showEditAccountModal = false" class="cancel-btn">
+                      <i class="fas fa-times"></i> Cancelar
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Modal de Confirmación de Eliminación -->
+              <div v-if="showDeleteConfirmation" class="custom-confirm-modal">
+                <div class="confirm-modal-content">
+                  <div class="confirm-modal-header">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Confirmar Eliminación</h3>
+                  </div>
+                  <div class="confirm-modal-body">
+                    <p>¿Estás seguro de que deseas eliminar permanentemente la cuenta <strong>{{
+                        accountToDelete?.name }}</strong>?</p>
+                    <p class="warning-text">Todos los fondos ({{
+                      formatCurrency(accountToDelete?.balance || 0) }}) serán perdidos
+                      irreversiblemente.</p>
+                    <p class="warning-text">Esta acción no se puede deshacer y se perderán todos los
+                      fondos asociados. <br><br> REPITO, ¿ESTAS SEGURO?</p>
+                  </div>
+                  <div class="confirm-modal-footer">
+                    <button @click="deleteAccount" class="confirm-btn">
+                      <i class="fas fa-trash"></i> Eliminar Permanentemente
+                    </button>
+                    <button @click="cancelDelete" class="cancel-btn">
+                      <i class="fas fa-times"></i> Cancelar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pestaña de Gestión de Usuarios -->
+            <div v-if="activeAccountTab === 'users'" class="tab-content user-management-tab">
+              <div class="user-management-container">
+                <div class="form-section">
+                  <div class="form-group">
+                    <label>Seleccionar Cuenta:</label>
+                    <select v-model="selectedUserAccount" class="styled-select">
+                      <option v-for="account in sharedAccounts" :value="account">
+                        {{ account.name }} ({{ formatCurrency(account.balance) }})
+                      </option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label>ID de Ciudadano:</label>
+                    <div class="search-user-container">
+                      <input type="text" v-model="userSearchQuery" @input="searchUsers" placeholder="Buscar usuario..."
+                        class="styled-input">
+                      <div v-if="userSearchResults.length > 0" class="search-results">
+                        <div v-for="user in userSearchResults" :key="user.citizenid" @click="selectUser(user)"
+                          class="search-result-item">
+                          {{ user.name }} ({{ user.citizenid }})
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="action-buttons">
+                    <button @click="addUserToAccount" class="action-btn add">
+                      <i class="fas fa-user-plus"></i> Añadir Usuario
+                    </button>
+                    <button @click="removeUserFromAccount" class="action-btn remove">
+                      <i class="fas fa-user-minus"></i> Eliminar Usuario
+                    </button>
+                  </div>
+                </div>
+
+                <div class="users-list-section">
+                  <h4>Usuarios autorizados</h4>
+
+                  <div v-if="selectedUserAccount">
+                    <!-- Mostrar carga mientras se obtienen los datos -->
+                    <div v-if="loadingUsers" class="loading-users">
+                      <i class="fas fa-spinner fa-spin"></i> Cargando usuarios...
+                    </div>
+
+                    <!-- Mostrar lista de usuarios -->
+                    <div v-else-if="accountUsers.length > 0" class="users-list">
+                      <div v-for="user in accountUsers" :key="user.citizenid" class="user-item">
+                        <div class="user-avatar">{{ getUserInitials(user.citizenid) }}</div>
+                        <div class="user-info">
+                          <span class="user-name">{{ user.name }}</span>
+                          <span class="user-id">ID: {{ user.citizenid }}</span>
+                        </div>
+                        <div class="user-actions" v-if="user.citizenid !== accountNumber">
+                          <button @click="removeUserFromAccount(user.citizenid)" class="action-btn remove">
+                            <i class="fas fa-user-minus"></i> Eliminar
+                          </button>
+                        </div>
+                        <div class="user-owner" v-else>
+                          <span class="owner-badge">Creador</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Mostrar mensaje si no hay usuarios -->
+                    <div v-else class="no-users">
+                      <i class="fas fa-users-slash"></i>
+                      <p>No hay usuarios autorizados</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal de Creación de Cuenta -->
+          <div v-if="showCreateAccountModal" class="create-account-modal">
+            <div class="modal-content">
+              <h3>Crear Nueva Cuenta Compartida</h3>
+
+              <div class="form-group">
+                <label>Nombre de la cuenta:</label>
+                <input type="text" v-model="newAccountName" placeholder="Ej: Ahorros Familia" class="styled-input">
+              </div>
+
+              <div class="form-group">
+                <label>Depósito inicial:</label>
+                <input type="number" v-model="newAccountAmount" min="0" class="styled-input">
+              </div>
+
+              <div class="modal-actions">
+                <button @click="createNewAccount" class="confirm-btn" :disabled="!canCreateAccount">
+                  <i class="fas fa-check"></i> Crear Cuenta
+                </button>
+                <button @click="showCreateAccountModal = false" class="cancel-btn">
+                  <i class="fas fa-times"></i> Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div v-if="showPinPrompt" class="atm-pin-prompt">
+      <div class="atm-pin-header">
+        <h3>INGRESA TU PIN</h3>
+        <p>Introduce el PIN de 4 dígitos de tu tarjeta</p>
+      </div>
+      <div class="atm-pin-display">
+        <input type="password" v-model="enteredPin" readonly placeholder="____" />
+      </div>
+      <div class="atm-pin-pad">
+        <button v-for="number in 9" :key="number" @click="appendNumber(number)" class="atm-pin-button">
+          {{ number }}
+        </button>
+        <button @click="enteredPin = ''" class="atm-pin-button clear-button">
+          <i class="fas fa-undo"></i>
+        </button>
+        <button @click="appendNumber(0)" class="atm-pin-button">0</button>
+        <button @click="pinPrompt(enteredPin)" class="atm-pin-button submit-button">
+          <i class="fas fa-check"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="banking-container atm-open" v-show="isATMOpen">
+      <div class="atm-main-content">
+        <div class="withdraw-container">
+
+          <div class="balance-header">
+            <div class="balance-section">
+              <div class="balance-title">EN ESTA CUENTA:</div>
+              <div class="balance-amount positive-balance">
+                {{ formatCurrency(selectedMoneyAccount?.balance || 0) }}
+              </div>
+            </div>
+            <div class="balance-section">
+              <div class="balance-title">EN EFECTIVO:</div>
+              <div class="balance-amount positive-balance">{{ formatCurrency(playerCash) }}</div>
+            </div>
+          </div>
+
+          <div class="withdraw-header">
+            <h2>RETIRAR DINERO</h2>
+            <p>Selecciona una cuenta y la cantidad que deseas retirar</p>
+          </div>
+
+          <div class="withdraw-fields">
+            <div class="withdraw-field">
+              <div class="field-row">
+                <h3>CUENTA DE ORIGEN</h3>
+                <select v-model="selectedMoneyAccount" class="atm-select">
+                  <option v-for="account in accounts" :key="account.name" :value="account">{{
+                    account.name }}</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="withdraw-field">
+              <div class="field-row">
+                <h3>CANTIDAD</h3>
+                <input type="number" v-model="selectedMoneyAmount" class="atm-input"
+                  placeholder="Ingresa la cantidad" />
+              </div>
+            </div>
+
+            <div class="withdraw-field">
+              <div class="field-row">
+                <h3>CONCEPTO (OPCIONAL)</h3>
+                <input type="text" v-model="moneyReason" class="atm-input" placeholder="Motivo del retiro" />
+              </div>
+            </div>
+          </div>
+
+          <div class="withdraw-actions">
+            <button class="withdraw-button" @click="withdrawMoney">
+              <i class="fas fa-money-bill-wave"></i> RETIRAR
+            </button>
+            <button class="atm-logout-button" @click="closeApplication()">
+              <i class="fas fa-sign-out-alt"></i> SALIR
+            </button>
+          </div>
+
+          <div class="atm-sidebar-footer">
+            <div class="player-name-account">
+              <span class="player-name"><strong style="color: white;">Nombre: </strong> {{ playerName
+                }}</span>
+              <span class="account-number"><strong style="color: white;">Nº Cuenta: </strong> {{
+                accountNumber }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+
+</body>
+<script src="script.js"></script>
+
+</html>
